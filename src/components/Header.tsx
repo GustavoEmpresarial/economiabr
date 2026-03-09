@@ -42,25 +42,31 @@ export default function Header() {
         <>
             <header className="top-header">
                 <div className="container header-content">
-                    <div className="menu-trigger" onClick={() => setIsMenuOpen(true)}>
-                        <svg className="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                            <path d="M4 6h16M4 12h16M4 18h16" />
-                        </svg>
-                        MENU
+                    <div className="header-left">
+                        <div className="menu-trigger" onClick={() => setIsMenuOpen(true)}>
+                            <svg className="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                                <path d="M4 6h16M4 12h16M4 18h16" />
+                            </svg>
+                            MENU
+                        </div>
+
+                        <div className="nav-links">
+                            <Link href="/">INICIO</Link>
+                            <Link href="/graficos" style={{ color: '#1b854a' }}>GRÁFICOS</Link>
+                        </div>
                     </div>
 
-                    <div className="nav-links">
-                        <Link href="/">INICIO</Link>
-                        <Link href="/graficos" style={{ color: '#1b854a' }}>GRÁFICOS</Link>
+                    <div className="header-center">
+                        <Link href="/" className="logo-container">ECONOMIA BR</Link>
                     </div>
 
-                    <Link href="/" className="logo-container">ECONOMIA BR</Link>
-
-                    <div className="search-icon-container" onClick={() => setIsSearchOpen(true)}>
-                        <svg className="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                            <circle cx="11" cy="11" r="8" />
-                            <path d="m21 21-4.3-4.3" />
-                        </svg>
+                    <div className="header-right">
+                        <div className="search-icon-container" onClick={() => setIsSearchOpen(true)}>
+                            <svg className="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                                <circle cx="11" cy="11" r="8" />
+                                <path d="m21 21-4.3-4.3" />
+                            </svg>
+                        </div>
                     </div>
                 </div>
             </header>

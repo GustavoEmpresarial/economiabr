@@ -50,13 +50,37 @@ a {
   top: 0;
   z-index: 100;
   border-bottom: 2px solid var(--accent);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
 }
 
 .header-content {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   width: 100%;
+}
+
+.header-left,
+.header-right {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.header-left {
+  gap: 2rem;
+  justify-content: flex-start;
+}
+
+.header-center {
+  display: flex;
+  justify-content: center;
+  flex: 1;
+  white-space: nowrap;
+}
+
+.header-right {
+  justify-content: flex-end;
 }
 
 .menu-trigger {
@@ -82,8 +106,17 @@ a {
 .nav-links {
   display: flex;
   gap: 2rem;
-  font-weight: bold;
-  font-size: 0.9rem;
+  font-weight: 800;
+  font-size: 0.95rem;
+  letter-spacing: 0.5px;
+}
+
+.nav-links a {
+  transition: color 0.3s ease;
+}
+
+.nav-links a:hover {
+  color: var(--accent) !important;
 }
 
 .search-icon-container {

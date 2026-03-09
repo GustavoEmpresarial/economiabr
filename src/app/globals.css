@@ -96,6 +96,15 @@ a {
   .nav-links {
     display: none !important;
   }
+
+  .logo-container {
+    font-size: 1.4rem;
+    letter-spacing: -1px;
+  }
+
+  .menu-trigger {
+    font-size: 0.85rem;
+  }
 }
 
 /* Sidebar Drawer Styles */
@@ -373,8 +382,27 @@ a {
 }
 
 @media (max-width: 768px) {
+  .top-header {
+    height: 56px;
+  }
+
+  .container {
+    padding: 0 0.85rem;
+  }
+
+  .search-form input {
+    font-size: 1.5rem;
+  }
+
+  .search-submit svg {
+    width: 30px;
+    height: 30px;
+  }
+
   .news-grid {
     grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 1.2rem 0;
   }
 
   .featured-title {
@@ -387,5 +415,52 @@ a {
 
   .feed-image {
     order: -1;
+  }
+
+  .feed-item h3 {
+    font-size: 1.35rem;
+  }
+
+  .article-header {
+    padding: 1.5rem 0;
+  }
+
+  .article-header h1 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+
+  .article-content {
+    font-size: 1.03rem;
+    line-height: 1.7;
+  }
+}
+
+@media (max-width: 480px) {
+  .menu-trigger {
+    gap: 0.35rem;
+    font-size: 0.78rem;
+  }
+
+  .logo-container {
+    font-size: 1.1rem;
+  }
+
+  .search-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .featured-title {
+    font-size: 1.6rem;
+  }
+
+  .secondary-title {
+    font-size: 1.2rem;
+  }
+
+  .feed-item {
+    gap: 0.8rem;
+    padding: 1.2rem 0;
   }
 }

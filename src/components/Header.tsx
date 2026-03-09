@@ -50,12 +50,12 @@ export default function Header() {
                     </div>
 
                     <div className="nav-links">
-                        <Link href="/">ECONOMIA BR</Link>
-                        <Link href="#" style={{ color: '#0081c2' }}>TECNOLOGIA</Link>
+                        <Link href="/">INICIO</Link>
                         <Link href="/graficos" style={{ color: '#1b854a' }}>GRÁFICOS</Link>
+                        <Link href="/admin" style={{ color: '#c4170c' }}>ADMIN</Link>
                     </div>
 
-                    <Link href="/" className="logo-container">ECONOMIA BR</Link>
+                    <Link href="/" className="logo-container">AUTOBLOG BR</Link>
 
                     <div className="search-icon-container" onClick={() => setIsSearchOpen(true)}>
                         <svg className="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
@@ -70,16 +70,13 @@ export default function Header() {
             <div className={`sidebar-overlay ${isMenuOpen ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)}>
                 <div className={`sidebar-drawer ${isMenuOpen ? 'active' : ''}`} onClick={(e) => e.stopPropagation()}>
                     <div className="sidebar-header">
-                        <span className="sidebar-logo">ECONOMIA BR</span>
+                        <span className="sidebar-logo">AUTOBLOG BR</span>
                         <button className="close-btn" onClick={() => setIsMenuOpen(false)}>&times;</button>
                     </div>
                     <nav className="sidebar-nav">
                         <Link href="/" onClick={() => setIsMenuOpen(false)}>Home</Link>
-                        <Link href="#" onClick={() => setIsMenuOpen(false)}>Economia</Link>
-                        <Link href="#" onClick={() => setIsMenuOpen(false)}>Tecnologia</Link>
                         <Link href="/graficos" onClick={() => setIsMenuOpen(false)}>Gráficos</Link>
-                        <Link href="#" onClick={() => setIsMenuOpen(false)}>Política</Link>
-                        <Link href="#" onClick={() => setIsMenuOpen(false)}>Mundo</Link>
+                        <Link href="/admin" onClick={() => setIsMenuOpen(false)}>Admin</Link>
                     </nav>
                 </div>
             </div>

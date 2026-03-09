@@ -9,10 +9,9 @@ import json
 # Serviços personalizados
 from services.rss_fetcher import RSSFetcher
 from services.ollama_rewriter import OllamaSEOWriter
-from services.blogger_publisher import BloggerPublisher
+from services.autoblog_publisher import AutoBlogPublisher
 from services.image_fetcher import ImageFetcher
 from services.text_formatter import TextFormatter
-from services.google_indexer import GoogleIndexer
 
 # === CONSTANTES === #
 STATS_FILE = Path("storage/stats/daily_stats.json")
@@ -106,47 +105,35 @@ def main():
     # Carrega variáveis do ambiente
     unsplash_access_key = os.getenv("UNSPLASH_ACCESS_KEY")
     feed_urls_str = os.getenv("RSS_FEEDS", "")
-    blogger_blog_id = os.getenv("BLOGGER_BLOG_ID")
+    autoblog_api_url = os.getenv("AUTOBLOG_API_URL", "").strip()
+    autoblog_api_secret = os.getenv("AUTOBLOG_API_SECRET", "").strip()
     ollama_model = os.getenv("OLLAMA_MODEL", "qwen3-vl:235b-cloud")
-    site_url = os.getenv("SITE_URL", "")
-    enable_indexing = os.getenv("ENABLE_GOOGLE_INDEXING", "true").lower() == "true"
-    indexing_interval = int(os.getenv("INDEXING_INTERVAL_SECONDS", "14400"))  # 4 horas
 
     feed_urls = [url.strip() for url in feed_urls_str.split(",") if url.strip()]
-
-    if not blogger_blog_id:
-        logging.error("❌ BLOGGER_BLOG_ID não encontrado no .env")
-        return
 
     if not feed_urls:
         logging.error("❌ Nenhum feed RSS configurado no .env")
         return
 
+    if not autoblog_api_url:
+        logging.error("❌ AUTOBLOG_API_URL não encontrado no .env")
+        return
+    if not autoblog_api_secret:
+        logging.error("❌ AUTOBLOG_API_SECRET não encontrado no .env")
+        return
+
     logging.info(f"🚀 Iniciando serviço de processamento com {len(feed_urls)} feed(s)...")
+    logging.info("🛰️ Destino de publicação: autoblog")
     logging.info(f"🧠 Modelo de redação: {ollama_model}")
 
     # Inicializa serviços
     fetcher = RSSFetcher(feed_urls)
     rewriter = OllamaSEOWriter(model_name=ollama_model)
-    publisher = BloggerPublisher(
-        credentials_file="credentials.json",
-        blog_id=blogger_blog_id,
-        token_file="token.json"
+    publisher = AutoBlogPublisher(
+        api_url=autoblog_api_url,
+        api_secret=autoblog_api_secret,
     )
     image_fetcher = ImageFetcher(unsplash_access_key) if unsplash_access_key else None
-    
-    # Inicializa indexador do Google (se habilitado)
-    indexer = None
-    if enable_indexing and site_url:
-        indexer = GoogleIndexer(
-            credentials_file="credentials.json",
-            blog_id=blogger_blog_id,
-            site_url=site_url,
-            token_file="token.json"
-        )
-        logging.info("📌 Indexador Google ativado")
-    elif enable_indexing and not site_url:
-        logging.warning("⚠️ SITE_URL não configurado. Indexação desativada.")
 
     # Carrega artigos já processados
     original_articles = safe_load_json(ORIGINAL_JSON, [])
@@ -156,8 +143,6 @@ def main():
     # Estado diário
     stats = load_daily_stats()
     today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    last_indexing_time = datetime.now(timezone.utc)
-
     if stats["date"] != today_str:
         stats = {"date": today_str, "start_time": "", "count": 0}
         save_daily_stats(today_str, "", 0)
@@ -250,16 +235,16 @@ def main():
                 "link": link,
                 "rewritten_content": new_content,
                 "rewritten_at": now_utc,
-                "published_to_blogger": success
+                "published_to_autoblog": success
             }
-            rewritten_articles.append(rewritten_entry)
-
-            processed_links.add(link)
-
-            safe_save_json(ORIGINAL_JSON, original_articles)
-            safe_save_json(REWRITTEN_JSON, rewritten_articles)
 
             if success:
+                rewritten_articles.append(rewritten_entry)
+                processed_links.add(link)
+
+                safe_save_json(ORIGINAL_JSON, original_articles)
+                safe_save_json(REWRITTEN_JSON, rewritten_articles)
+
                 daily_count += 1
                 stats["count"] = daily_count
                 if not stats["start_time"]:
@@ -267,17 +252,12 @@ def main():
                 save_daily_stats(today_str, stats["start_time"], daily_count)
                 logging.info(f"✅ Artigo publicado com sucesso! ({daily_count}/{MAX_POSTS_PER_DAY})")
             else:
-                logging.error("❌ Falha ao publicar. Marcado como processado.")
-# Verifica se deve indexar novos posts
-            now = datetime.now(timezone.utc)
-            if indexer and (now - last_indexing_time).total_seconds() >= indexing_interval:
-                logging.info("🔍 Iniciando indexação de novos posts no Google...")
-                try:
-                    result = indexer.index_posts_batch(max_new_posts=10)
-                    logging.info(f"📊 Indexação concluída: {result['new_posts_indexed']} posts novos indexados")
-                    last_indexing_time = now
-                except Exception as e:
-                    logging.error(f"❌ Erro na indexação: {e}")
+                logging.error("❌ Falha ao publicar. Artigo sera tentado novamente apos corrigir a autenticacao.")
+                status_code = getattr(publisher, "last_status_code", None)
+                if status_code == 401:
+                    logging.error("🔐 Falha de autenticação (401). Verifique API_SECRET na VPS e no BOT antes de continuar.")
+                    time.sleep(CHECK_INTERVAL)
+                    continue
 
             
             logging.info("⏳ Aguardando 120s antes do próximo artigo (segurança de quota)...")

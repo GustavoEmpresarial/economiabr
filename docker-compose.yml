@@ -8,9 +8,9 @@ services:
     container_name: autoblog_app
     restart: unless-stopped
     ports:
-      # Mapeia a porta 80 do host (VPS) para a porta 3000 do contêiner.
-      # Assim você pode acessar pelo IP da VPS diretamente (http://IP_DA_VPS/)
-      - "80:3000"
+      # Mapeia a porta 3000 do host (VPS) para a porta 3000 do contêiner.
+      # Assim você pode acessar por http://IP_DA_VPS:3000/
+      - "3000:3000"
     environment:
       # O banco de dados SQLite será criado dentro do volume
       - DATABASE_URL=file:/app/prisma/data/dev.db

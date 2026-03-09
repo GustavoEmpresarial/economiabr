@@ -41,16 +41,15 @@ RUN chown nextjs:nodejs .next
 # Install openssl for Prisma in the runner stage
 RUN apk add --no-cache openssl
 
-# Create the directory for the SQLite database
-RUN mkdir -p /app/prisma
-RUN chown nextjs:nodejs /app/prisma
+# Create directories for Prisma schema and persistent SQLite path
+RUN mkdir -p /app/prisma/data
+RUN chown -R nextjs:nodejs /app/prisma
 
 # Copy the standalone output from Next.js
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/prisma/schema.prisma ./prisma/
-COPY --from=builder --chown=nextjs:nodejs /app/prisma/dev.db ./prisma/
 
 # Create a start script to run migrations/push before starting the app
 USER nextjs

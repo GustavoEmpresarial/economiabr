@@ -21,7 +21,7 @@ services:
       # Isso garante que você não perca os dados quando o contêiner reiniciar.
       - ./prisma_data:/app/prisma/data
       # Volume para persistir os uploads de imagens locais.
-      - ./uploads:/app/public/uploads
+      - ./public/uploads:/app/public/uploads
     networks:
       - autoblog_net
 

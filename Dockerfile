@@ -20,6 +20,7 @@ COPY . .
 
 # Generate Prisma Client and build the Next.js project
 RUN npx prisma generate
+RUN npx prisma db push
 RUN npm run build
 
 # Production image, copy all the files and run next
@@ -49,6 +50,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/prisma/schema.prisma ./prisma/
+COPY --from=builder --chown=nextjs:nodejs /app/prisma/dev.db ./prisma/
 
 # Create a start script to run migrations/push before starting the app
 USER nextjs

@@ -47,13 +47,17 @@ RUN apk add --no-cache openssl
 
 # Create directories for Prisma schema and persistent SQLite path
 RUN mkdir -p /app/prisma/data
+RUN mkdir -p /app/data
 RUN chown -R nextjs:nodejs /app/prisma
+RUN chown -R nextjs:nodejs /app/data
 
 # Copy the standalone output from Next.js
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/prisma/schema.prisma ./prisma/
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
 
 # Create a start script to run migrations/push before starting the app
 USER nextjs

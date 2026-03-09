@@ -2,6 +2,7 @@ import requests
 import logging
 import re
 import time
+import os
 from typing import Optional, Tuple
 try:
     from ddgs import DDGS
@@ -13,7 +14,9 @@ logger = logging.getLogger(__name__)
 class OllamaSEOWriter:
     def __init__(self, model_name: str = "qwen2.5:14b"): # Mantive o 14b que você baixou
         self.model_name = model_name
-        self.api_url = "http://localhost:11434/api/generate"
+        base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434").strip().rstrip("/")
+        # Accept either base URL (http://host:11434) or full generate path.
+        self.api_url = base_url if base_url.endswith("/api/generate") else f"{base_url}/api/generate"
         self.ddgs = DDGS()
 
     def _get_web_context(self, query: str, max_results: int = 3) -> str:

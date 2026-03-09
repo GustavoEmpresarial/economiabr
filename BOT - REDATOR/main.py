@@ -108,6 +108,7 @@ def main():
     autoblog_api_url = os.getenv("AUTOBLOG_API_URL", "").strip()
     autoblog_api_secret = os.getenv("AUTOBLOG_API_SECRET", "").strip()
     ollama_model = os.getenv("OLLAMA_MODEL", "qwen3-vl:235b-cloud")
+    ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434").strip()
 
     feed_urls = [url.strip() for url in feed_urls_str.split(",") if url.strip()]
 
@@ -125,6 +126,7 @@ def main():
     logging.info(f"🚀 Iniciando serviço de processamento com {len(feed_urls)} feed(s)...")
     logging.info("🛰️ Destino de publicação: autoblog")
     logging.info(f"🧠 Modelo de redação: {ollama_model}")
+    logging.info(f"🔌 Endpoint Ollama: {ollama_base_url}")
 
     # Inicializa serviços
     fetcher = RSSFetcher(feed_urls)

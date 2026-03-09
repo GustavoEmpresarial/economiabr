@@ -37,7 +37,11 @@ export async function POST(request: Request) {
         })
 
         return NextResponse.json(post, { status: 201 })
-    } catch (error) {
+    } catch (error: any) {
+        if (error?.code === 'P2002') {
+            return NextResponse.json({ error: 'Slug already exists' }, { status: 409 })
+        }
+
         console.error('Error creating post:', error)
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
     }

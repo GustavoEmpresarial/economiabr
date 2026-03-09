@@ -65,8 +65,13 @@ class AutoBlogPublisher:
         ]
         secret_candidates = list(dict.fromkeys([s for s in secret_candidates if s]))
 
-        for attempt in range(3):
-            slug = slug_base if attempt == 0 else f"{slug_base}-{attempt + 1}"
+        for attempt in range(8):
+            if attempt == 0:
+                slug = slug_base
+            elif attempt <= 4:
+                slug = f"{slug_base}-{attempt + 1}"
+            else:
+                slug = f"{slug_base}-{int(datetime.now(timezone.utc).timestamp())}-{attempt}"
             response = None
             for candidate_secret in secret_candidates:
                 payload = {
@@ -97,10 +102,13 @@ class AutoBlogPublisher:
                 logger.info(f"✅ Post publicado no AutoBlog: {self.posts_endpoint} ({slug})")
                 return True
 
-            if response.status_code in {409, 500}:
-                # 500 pode ocorrer se slug unico conflitar no backend sem tratamento.
-                # Tenta novamente com sufixo incremental.
+            if response.status_code == 409:
                 logger.warning(f"⚠️ Conflito ao publicar (slug: {slug}). Tentando novo slug...")
+                continue
+
+            # Compatibilidade com backend antigo que devolve 500 para conflito de slug.
+            if response.status_code == 500 and "slug" in (response.text or "").lower():
+                logger.warning(f"⚠️ Possivel conflito de slug (slug: {slug}). Tentando novo slug...")
                 continue
 
             logger.error(
@@ -110,5 +118,5 @@ class AutoBlogPublisher:
             )
             return False
 
-        logger.error("❌ Falha ao publicar no AutoBlog após 3 tentativas de slug.")
+        logger.error("❌ Falha ao publicar no AutoBlog após múltiplas tentativas de slug.")
         return False

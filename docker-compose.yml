@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  autoblog:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: autoblog_app
+    restart: unless-stopped
+    ports:
+      # Mapeia a porta 80 do host (VPS) para a porta 3000 do contêiner.
+      # Assim você pode acessar pelo IP da VPS diretamente (http://IP_DA_VPS/)
+      - "80:3000"
+    environment:
+      # O banco de dados SQLite será criado dentro do volume
+      - DATABASE_URL=file:/app/prisma/data/dev.db
+      # Informe a mesma senha para o bot
+      - API_SECRET=${API_SECRET:-autoblog_secret_2026}
+    volumes:
+      # Mapeia a pasta local './prisma_data' na VPS para dentro do contêiner.
+      # Isso garante que você não perca os dados quando o contêiner reiniciar.
+      - ./prisma_data:/app/prisma/data
+      # Volume para persistir os uploads de imagens locais.
+      - ./uploads:/app/public/uploads
+    networks:
+      - autoblog_net
+
+networks:
+  autoblog_net:
+    driver: bridge

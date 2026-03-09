@@ -39,3 +39,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/src/generated/prisma
+
+# python bot sensitive/cache files
+BOT - REDATOR/credentials.json
+BOT - REDATOR/token.json
+BOT - REDATOR/**/__pycache__/
+BOT - REDATOR/**/*.pyc
+
+# local databases
+dev.db
+prisma/dev.db

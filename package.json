@@ -5,10 +5,12 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "node .next/standalone/server.js",
+    "start:local": "npm run build && xcopy /E /I /Y public .next\\standalone\\public && xcopy /E /I /Y .next\\static .next\\standalone\\.next\\static && node .next/standalone/server.js",
     "lint": "eslint"
   },
   "dependencies": {
+    "@prisma/client": "^5.22.0",
     "next": "16.1.6",
     "react": "19.2.3",
     "react-dom": "19.2.3"
@@ -19,6 +21,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "prisma": "^5.22.0",
     "typescript": "^5"
   }
 }

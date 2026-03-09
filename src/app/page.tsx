@@ -1,66 +1,78 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+import { prisma } from '@/lib/prisma'
+import Link from 'next/link'
 
-export default function Home() {
+export const revalidate = 60
+
+export default async function Home() {
+  const allPosts = await prisma.post.findMany({
+    where: { published: true },
+    orderBy: { createdAt: 'desc' },
+  })
+
+  const featured = allPosts[0]
+  const secondaries = allPosts.slice(1, 3)
+  const feed = allPosts.slice(3)
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.tsx file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="container">
+      {/* G1 Hero Grid */}
+      <section className="news-grid">
+        {featured ? (
+          <div className="main-featured">
+            <Link href={`/blog/${featured.slug}`}>
+              {featured.imageUrl && (
+                <img src={featured.imageUrl} alt={featured.title} className="feed-image" style={{ marginBottom: '1.5rem', maxHeight: '500px' }} />
+              )}
+              <span className="category-tag">DESTAQUE</span>
+              <h1 className="featured-title">{featured.title}</h1>
+              <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>
+                {featured.excerpt || featured.content.substring(0, 180).replace(/<[^>]*>?/gm, '') + '...'}
+              </p>
+            </Link>
+          </div>
+        ) : (
+          <div className="main-featured">
+            <h1>Nenhuma notícia em destaque</h1>
+          </div>
+        )}
+
+        <div className="secondary-column">
+          {secondaries.map((post) => (
+            <div key={post.id} className="secondary-news">
+              <Link href={`/blog/${post.slug}`}>
+                <span className="category-tag">GERAL</span>
+                <h2 className="secondary-title">{post.title}</h2>
+              </Link>
+            </div>
+          ))}
         </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      </section>
+
+      {/* Feed List */}
+      <section className="feed-content">
+        <h2 style={{ borderBottom: '2px solid #c4170c', display: 'inline-block', marginBottom: '2rem', paddingBottom: '0.2rem' }}>MAIS NOTÍCIAS</h2>
+        {feed.map((post) => (
+          <div key={post.id} className="feed-item">
+            <div>
+              <span className="category-tag">NOTÍCIA</span>
+              <Link href={`/blog/${post.slug}`}>
+                <h3>{post.title}</h3>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '0.5rem' }}>
+                  {post.excerpt || post.content.substring(0, 120).replace(/<[^>]*>?/gm, '') + '...'}
+                </p>
+              </Link>
+              <div className="meta">
+                Há {Math.floor((new Date().getTime() - new Date(post.createdAt).getTime()) / (1000 * 60 * 60))} horas
+              </div>
+            </div>
+            {post.imageUrl ? (
+              <img src={post.imageUrl} alt={post.title} className="feed-image" />
+            ) : (
+              <div className="feed-image" style={{ background: `linear-gradient(45deg, #1a1a1a, #2a2a2a)` }} />
+            )}
+          </div>
+        ))}
+      </section>
     </div>
-  );
+  )
 }

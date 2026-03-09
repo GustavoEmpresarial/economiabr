@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma'
+import { db } from '@/lib/db'
 import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
 
@@ -8,11 +8,21 @@ interface PostPageProps {
     }
 }
 
+type PostRow = {
+    id: string
+    title: string
+    slug: string
+    content: string
+    excerpt: string | null
+    imageUrl: string | null
+    published: number
+    createdAt: string
+    updatedAt: string
+}
+
 export async function generateMetadata({ params }: PostPageProps): Promise<Metadata> {
     const { slug } = await params
-    const post = await prisma.post.findUnique({
-        where: { slug },
-    })
+    const post = db.prepare(`SELECT * FROM "Post" WHERE slug = ?`).get(slug) as PostRow | undefined
 
     if (!post) return {}
 
@@ -24,9 +34,7 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
 
 export default async function PostPage({ params }: PostPageProps) {
     const { slug } = await params
-    const post = await prisma.post.findUnique({
-        where: { slug },
-    })
+    const post = db.prepare(`SELECT * FROM "Post" WHERE slug = ?`).get(slug) as PostRow | undefined
 
     if (!post) {
         notFound()

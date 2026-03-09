@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { db } from '@/lib/db'
+import { randomUUID } from 'crypto'
 
 export async function POST(request: Request) {
     try {
@@ -15,14 +16,14 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const log = await (prisma as any).log.create({
-            data: {
-                level,
-                message,
-                botName,
-            },
-        })
+        const stmt = db.prepare(`
+            INSERT INTO "Log" (id, level, message, botName)
+            VALUES (?, ?, ?, ?)
+        `)
+        const id = randomUUID()
+        stmt.run(id, level, message, botName)
+
+        const log = db.prepare(`SELECT * FROM "Log" WHERE id = ?`).get(id)
 
         return NextResponse.json(log, { status: 201 })
     } catch (error) {
@@ -33,11 +34,11 @@ export async function POST(request: Request) {
 
 export async function GET() {
     try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const logs = await (prisma as any).log.findMany({
-            orderBy: { createdAt: 'desc' },
-            take: 100,
-        })
+        const logs = db.prepare(`
+            SELECT * FROM "Log" 
+            ORDER BY createdAt DESC 
+            LIMIT 100
+        `).all()
         return NextResponse.json(logs)
     } catch (error) {
         console.error('Error fetching logs:', error)

@@ -1,13 +1,26 @@
-import { prisma } from '@/lib/prisma'
+import { db } from '@/lib/db'
 import Link from 'next/link'
 
 export const revalidate = 60
 
+type PostRow = {
+  id: string
+  title: string
+  slug: string
+  content: string
+  excerpt: string | null
+  imageUrl: string | null
+  published: number
+  createdAt: string
+  updatedAt: string
+}
+
 export default async function Home() {
-  const allPosts = await prisma.post.findMany({
-    where: { published: true },
-    orderBy: { createdAt: 'desc' },
-  })
+  const allPosts = db.prepare(`
+    SELECT * FROM "Post" 
+    WHERE published = 1 
+    ORDER BY createdAt DESC
+  `).all() as PostRow[]
 
   const featured = allPosts[0]
   const secondaries = allPosts.slice(1, 3)

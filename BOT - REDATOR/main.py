@@ -254,7 +254,7 @@ def main():
                 save_daily_stats(today_str, stats["start_time"], daily_count)
                 logging.info(f"✅ Artigo publicado com sucesso! ({daily_count}/{MAX_POSTS_PER_DAY})")
             else:
-                logging.error("❌ Falha ao publicar. Artigo sera tentado novamente apos corrigir a autenticacao.")
+                logging.error("❌ Falha ao publicar. Verifique conectividade, API_SECRET e logs do servidor AutoBlog.")
                 status_code = getattr(publisher, "last_status_code", None)
                 if status_code == 401:
                     logging.error("🔐 Falha de autenticação (401). Verifique API_SECRET na VPS e no BOT antes de continuar.")

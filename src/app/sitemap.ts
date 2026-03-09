@@ -1,11 +1,8 @@
 import { MetadataRoute } from 'next'
-import { prisma } from '@/lib/prisma'
+import { db } from '@/lib/db'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-    const posts = await prisma.post.findMany({
-        where: { published: true },
-        select: { slug: true, updatedAt: true },
-    })
+    const posts = db.prepare(`SELECT slug, updatedAt FROM "Post" WHERE published = 1`).all() as { slug: string, updatedAt: string }[]
 
     const baseUrl = 'https://your-domain.com'
 

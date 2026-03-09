@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma'
+import { db } from '@/lib/db'
 import styles from './page.module.css'
 
 interface Log {
@@ -6,11 +6,11 @@ interface Log {
     level: string
     message: string
     botName: string
-    createdAt: Date
+    createdAt: string
 }
 
-function formatDate(date: Date) {
-    return new Date(date).toLocaleString('pt-BR', {
+function formatDate(dateString: string) {
+    return new Date(dateString).toLocaleString('pt-BR', {
         day: '2-digit',
         month: '2-digit',
         hour: '2-digit',
@@ -22,11 +22,11 @@ function formatDate(date: Date) {
 export const dynamic = 'force-dynamic'
 
 export default async function LogsPage() {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const logs: Log[] = await (prisma as any).log.findMany({
-        orderBy: { createdAt: 'desc' },
-        take: 100,
-    })
+    const logs = db.prepare(`
+        SELECT * FROM "Log" 
+        ORDER BY createdAt DESC 
+        LIMIT 100
+    `).all() as Log[]
 
     return (
         <main>

@@ -13,13 +13,13 @@ services:
       - "3000:3000"
     environment:
       # O banco de dados SQLite será criado dentro do volume
-      - DATABASE_URL=file:/app/prisma/data/dev.db
+      - DATABASE_URL=file:/app/data/dev.db
       # Informe a mesma senha para o bot
       - API_SECRET=${API_SECRET:-autoblog_secret_2026}
     volumes:
       # Mapeia a pasta local './prisma_data' na VPS para dentro do contêiner.
       # Isso garante que você não perca os dados quando o contêiner reiniciar.
-      - ./prisma_data:/app/prisma/data
+      - ./prisma_data:/app/data
       # Volume para persistir os uploads de imagens locais.
       - ./public/uploads:/app/public/uploads
     networks:

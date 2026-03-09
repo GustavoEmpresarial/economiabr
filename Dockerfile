@@ -23,8 +23,6 @@ ARG DATABASE_URL="file:./prisma/dev.db"
 ENV DATABASE_URL=${DATABASE_URL}
 
 # Generate Prisma Client and build the Next.js project
-RUN npx prisma generate
-RUN npx prisma db push
 RUN npm run build
 
 # Production image, copy all the files and run next
@@ -42,22 +40,14 @@ RUN adduser --system --uid 1001 nextjs
 RUN mkdir .next
 RUN chown nextjs:nodejs .next
 
-# Install openssl for Prisma in the runner stage
-RUN apk add --no-cache openssl
-
-# Create directories for Prisma schema and persistent SQLite path
-RUN mkdir -p /app/prisma/data
+# Create directories for persistent SQLite path
 RUN mkdir -p /app/data
-RUN chown -R nextjs:nodejs /app/prisma
 RUN chown -R nextjs:nodejs /app/data
 
 # Copy the standalone output from Next.js
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-COPY --from=builder --chown=nextjs:nodejs /app/prisma/schema.prisma ./prisma/
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
 
 # Create a start script to run migrations/push before starting the app
 USER nextjs

@@ -18,6 +18,10 @@ RUN apk add --no-cache libc6-compat openssl
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Provide a fallback DATABASE_URL during image build (.env is often excluded in CI/CD).
+ARG DATABASE_URL="file:./prisma/dev.db"
+ENV DATABASE_URL=${DATABASE_URL}
+
 # Generate Prisma Client and build the Next.js project
 RUN npx prisma generate
 RUN npx prisma db push

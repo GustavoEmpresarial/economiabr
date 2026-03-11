@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Economia BR | Noticias em Tempo Real</title>
+    <meta name="description" content="Blog automático com publicação via Ollama" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="top-header">
+      <div class="container nav-shell">
+        <div class="header-left">
+          <a href="/" class="menu-trigger link-reset" aria-label="Abrir menu">
+            <span class="menu-icon" aria-hidden="true"></span>
+            <span>MENU</span>
+          </a>
+          <nav class="nav-links" aria-label="Navegacao principal">
+            <a href="/" class="link-reset">INICIO</a>
+            <a href="#mais-noticias" class="link-reset accent-green">GRAFICOS</a>
+          </nav>
+        </div>
+
+        <a href="/" class="logo link-reset">ECONOMIA BR</a>
+
+        <div class="header-right">
+          <button class="search-btn" type="button" aria-label="Buscar">
+            <span class="search-lens" aria-hidden="true"></span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container home-content">
+      <section class="news-grid" id="home-news">
+        <div id="featured-slot"></div>
+        <div id="secondary-slot" class="secondary-column"></div>
+      </section>
+
+      <section id="mais-noticias" class="feed-content">
+        <h2 class="feed-title">MAIS NOTICIAS</h2>
+        <div id="feed-slot"></div>
+      </section>
+    </main>
+
+    <script src="/main.js"></script>
+  </body>
+</html>

@@ -1,36 +1,123 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AutoBlog
 
-## Getting Started
+Projeto com duas partes:
 
-First, run the development server:
+1. **Blog no servidor (VPS)** em container Docker
+2. **Redator no PC** usando Ollama para gerar artigo e enviar para o servidor
+
+## Stack
+
+- Node.js + Express
+- PostgreSQL (container dedicado `db`)
+- Frontend estatico
+- Redator CLI com Ollama
+
+## Rodar local
 
 ```bash
+npm install
+copy .env.example .env
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Acesse: `http://localhost:3000`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## API principal
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `GET /api/health`
+- `GET /api/posts`
+- `GET /api/posts/:slug`
+- `POST /api/posts` (protegido com `x-api-secret`)
 
-## Learn More
+Exemplo de `POST /api/posts`:
 
-To learn more about Next.js, take a look at the following resources:
+```json
+{
+  "title": "Titulo do artigo",
+  "excerpt": "Resumo curto",
+  "contentMarkdown": "# Conteudo em markdown",
+  "imageUrl": "https://site.com/imagem.jpg",
+  "tags": ["IA", "Blog"]
+}
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deploy na VPS com Docker
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Suba os arquivos para a VPS.
+2. Crie `.env` baseado em `.env.example`.
+3. Defina um `API_SECRET` forte.
+4. Defina uma senha forte em `POSTGRES_PASSWORD`.
+5. Rode:
 
-## Deploy on Vercel
+```bash
+docker compose up -d --build
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+6. Teste:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+curl http://IP_DA_VPS:3000/api/health
+```
+
+## Padrao recomendado para VPS com varios sites
+
+Cada site deve ter seu proprio container de app e seu proprio container de banco. Neste projeto isso ja acontece via `services.autoblog` + `services.db` no `docker-compose.yml`.
+
+Boas praticas:
+
+- Use nomes de projeto diferentes por site ao subir (`-p site1`, `-p site2`).
+- Nao exponha a porta do banco para internet publica (sem `ports` no service `db`).
+- Use uma senha diferente de banco para cada site.
+- Mantenha um volume dedicado por site para persistencia (`autoblog-db-data`).
+
+Exemplo para subir com nome isolado:
+
+```bash
+docker compose -p autoblog-prod up -d --build
+```
+
+## Redator no PC com Ollama
+
+No PC local (onde o Ollama roda):
+
+1. Instale Ollama e puxe um modelo, por exemplo:
+
+```bash
+ollama pull llama3.1:8b
+```
+
+2. No `.env` local, configure:
+
+- `OLLAMA_URL=http://127.0.0.1:11434`
+- `OLLAMA_PATH=/api/generate`
+- `OLLAMA_MODEL=llama3.1:8b`
+- `OLLAMA_API_KEY=` (preencha quando usar provedor cloud)
+- `BASE_URL=http://IP_DA_VPS:3000`
+- `API_SECRET=mesmo_token_do_servidor`
+
+Para usar Ollama em cloud, troque `OLLAMA_URL` para o endpoint do provedor e configure `OLLAMA_API_KEY`.
+
+3. Gere e publique:
+
+```bash
+npm run redator -- --tema "Seu tema aqui"
+```
+
+Modo feed G1 Economia (gera artigos originais a partir das pautas do feed):
+
+```bash
+npm run redator -- --g1-financas --limite 3
+```
+
+Opcional:
+
+```bash
+npm run redator -- --tema "Tema" --imagem "https://..." --modelo "llama3.1:8b"
+```
+
+## Estrutura
+
+- `src/server.js`: API + servidor web
+- `src/db.js`: conexao e inicializacao do PostgreSQL
+- `public/`: site do blog
+- `redator/cli.js`: script de geracao/publicacao

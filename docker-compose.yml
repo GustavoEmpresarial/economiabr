@@ -1,30 +1,31 @@
-version: '3.8'
-
 services:
   autoblog:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: autoblog_app
+    build: .
+    container_name: autoblog
     restart: unless-stopped
     ports:
-      # Mapeia a porta 3000 do host (VPS) para a porta 3000 do contêiner.
-      # Assim você pode acessar por http://IP_DA_VPS:3000/
       - "3000:3000"
-    environment:
-      # O banco de dados SQLite será criado dentro do volume
-      - DATABASE_URL=file:/app/data/dev.db
-      # Informe a mesma senha para o bot
-      - API_SECRET=${API_SECRET:-autoblog_secret_2026}
-    volumes:
-      # Mapeia a pasta local './prisma_data' na VPS para dentro do contêiner.
-      # Isso garante que você não perca os dados quando o contêiner reiniciar.
-      - ./prisma_data:/app/data
-      # Volume para persistir os uploads de imagens locais.
-      - ./public/uploads:/app/public/uploads
-    networks:
-      - autoblog_net
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
 
-networks:
-  autoblog_net:
-    driver: bridge
+  db:
+    image: postgres:15-alpine
+    container_name: autoblog-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-autoblog}
+      POSTGRES_USER: ${POSTGRES_USER:-autoblog}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-troque-esta-senha}
+    volumes:
+      - autoblog-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-autoblog} -d ${POSTGRES_DB:-autoblog}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  autoblog-db-data:

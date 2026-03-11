@@ -14,11 +14,19 @@ const path = require("path");
 
 dotenv.config();
 
+function getArgValue(flag, defaultValue) {
+  const idx = process.argv.indexOf(flag);
+  if (idx === -1 || idx >= process.argv.length - 1) {
+    return defaultValue;
+  }
+  return process.argv[idx + 1];
+}
+
 function getArgs() {
-  const times = Number(process.argv[process.argv.indexOf("--times") + 1] || 2);
-  const articles = Number(process.argv[process.argv.indexOf("--articles") + 1] || 5);
-  const mode = process.argv[process.argv.indexOf("--mode") + 1] || "g1-financas";
-  const delay = Number(process.argv[process.argv.indexOf("--delay") + 1] || 0);
+  const times = Number(getArgValue("--times", "2"));
+  const articles = Number(getArgValue("--articles", "5"));
+  const mode = getArgValue("--mode", "g1-financas");
+  const delay = Number(getArgValue("--delay", "0"));
 
   return { times, articles, mode, delay };
 }
@@ -99,6 +107,7 @@ Começando...
 ║          Total: ${times} execuções × ${articles} artigos = ${times * articles} artigos           ║
 ╚══════════════════════════════════════════════════════════════╝
 `);
+  process.exit(0);
 }
 
 main().catch((err) => {

@@ -57,7 +57,7 @@ async function fetchUnsplashImage(theme) {
     console.error(`❌ Erro ao buscar imagem no Unsplash: ${error.message}`);
     return undefined;
   }
-}
+  }
 
 async function fetchImageUrl(theme) {
   // Tenta Pixabay primeiro (mais confiável com API key)

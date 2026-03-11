@@ -299,7 +299,6 @@ async function run() {
       console.log("Buscando imagem royalty-free...");
       finalImageUrl = await fetchImageUrl(parsed.title);
     }
-
     const result = await publishToServer({
       baseUrl,
       apiSecret,
@@ -328,6 +327,13 @@ async function run() {
     console.log(`\n[${index + 1}/${entries.length}] Gerando baseado em: ${entry.title}`);
     const raw = await generateFromNewsWithOllama({
       source: entry,
+      model,
+      ollamaUrl,
+    });
+
+    const parsed = parseGeneratedText(raw);
+    const withSource = `${parsed.contentMarkdown}\n\nFonte: ${entry.link}`;
+
     // Busca imagem automaticamente se não foi fornecida
     let finalImageUrl = imageUrl || entry.imageUrl;
     if (!finalImageUrl) {
@@ -342,14 +348,7 @@ async function run() {
         title: parsed.title,
         excerpt: parsed.excerpt,
         contentMarkdown: withSource,
-        imageUrl: finalIver({
-      baseUrl,
-      apiSecret,
-      payload: {
-        title: parsed.title,
-        excerpt: parsed.excerpt,
-        contentMarkdown: withSource,
-        imageUrl: imageUrl || entry.imageUrl || undefined,
+        imageUrl: finalImageUrl || undefined,
         tags: ["IA", "AutoBlog", "G1", "Economia"],
       },
     });

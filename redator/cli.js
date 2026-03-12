@@ -52,29 +52,6 @@ function extractTag(block, tagName) {
   return match ? decodeXml(match[1]).trim() : "";
 }
 
-function extractImageUrl(block) {
-  const patterns = [
-    /<media:content[^>]*url=["']([^"']+)["'][^>]*>/i,
-    /<media:thumbnail[^>]*url=["']([^"']+)["'][^>]*>/i,
-    /<enclosure[^>]*url=["']([^"']+)["'][^>]*type=["']image\/[^"]+["'][^>]*>/i,
-  ];
-
-  for (const pattern of patterns) {
-    const match = block.match(pattern);
-    if (match && match[1]) {
-      return decodeXml(match[1]).trim();
-    }
-  }
-
-  const description = extractTag(block, "description");
-  const imgFromDescription = description.match(/<img[^>]*src=["']([^"']+)["'][^>]*>/i);
-  if (imgFromDescription && imgFromDescription[1]) {
-    return decodeXml(imgFromDescription[1]).trim();
-  }
-
-  return "";
-}
-
 async function fetchG1Feed(feedUrl, limit) {
   let response;
   try {
@@ -95,8 +72,16 @@ async function fetchG1Feed(feedUrl, limit) {
     link: extractTag(itemBlock, "link"),
     description: stripHtml(extractTag(itemBlock, "description")),
     pubDate: extractTag(itemBlock, "pubDate"),
-    imageUrl: extractImageUrl(itemBlock),
   }));
+}
+
+function stripSourceLines(markdown) {
+  return String(markdown || "")
+    .split("\n")
+    .filter((line) => !/^\s*fonte\s*:/i.test(line))
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
 
 async function generateWithOllama({ theme, model, ollamaUrl }) {
@@ -158,7 +143,8 @@ Requisitos:
 - Markdown com subtitulos
 - Introducao, desenvolvimento e conclusao
 - Ate 900 palavras
-- Cite a fonte ao final com: "Fonte: <link>"
+- Nao inclua links da pauta no texto final
+- Nao inclua linha iniciada por "Fonte:"
 - Nao inclua cercas de codigo
 
 Entregue exatamente neste formato:
@@ -217,7 +203,7 @@ function parseGeneratedText(text) {
 
   const title = titleMatch ? titleMatch[1].trim() : "Artigo sem titulo";
   const excerpt = resumoMatch ? resumoMatch[1].trim() : "";
-  const contentMarkdown = contentMatch ? contentMatch[1].trim() : text.trim();
+  const contentMarkdown = stripSourceLines(contentMatch ? contentMatch[1].trim() : text.trim());
 
   return { title, excerpt, contentMarkdown };
 }
@@ -332,10 +318,9 @@ async function run() {
     });
 
     const parsed = parseGeneratedText(raw);
-    const withSource = `${parsed.contentMarkdown}\n\nFonte: ${entry.link}`;
 
     // Busca imagem automaticamente se não foi fornecida
-    let finalImageUrl = imageUrl || entry.imageUrl;
+    let finalImageUrl = imageUrl;
     if (!finalImageUrl) {
       console.log("Buscando imagem royalty-free...");
       finalImageUrl = await fetchImageUrl(parsed.title);
@@ -347,7 +332,7 @@ async function run() {
       payload: {
         title: parsed.title,
         excerpt: parsed.excerpt,
-        contentMarkdown: withSource,
+        contentMarkdown: parsed.contentMarkdown,
         imageUrl: finalImageUrl || undefined,
         tags: ["IA", "AutoBlog", "G1", "Economia"],
       },

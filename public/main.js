@@ -8,10 +8,12 @@ function formatDate(dateInput) {
   });
 }
 
+const FALLBACK_IMAGE = "https://picsum.photos/seed/autoblog-card/640/360";
+
 function renderFeatured(post) {
   const image = post.image_url
-    ? `<img class="main-image" src="${post.image_url}" alt="${post.title}" loading="lazy" />`
-    : "";
+    ? `<img class="main-image" src="${post.image_url}" alt="${post.title}" loading="lazy" onerror="this.onerror=null;this.src='${FALLBACK_IMAGE}';" />`
+    : `<img class="main-image" src="${FALLBACK_IMAGE}" alt="Imagem de destaque" loading="lazy" />`;
 
   return `
     <article class="main-featured">
@@ -52,7 +54,7 @@ function renderFeed(posts) {
           <p class="feed-item-excerpt">${post.excerpt || "Clique para ler o conteudo completo."}</p>
           <p class="feed-meta">Atualizado em ${formatDate(post.published_at)}</p>
         </div>
-        ${post.image_url ? `<img class="feed-image" src="${post.image_url}" alt="${post.title}" loading="lazy" />` : `<div class="feed-image"></div>`}
+        <img class="feed-image" src="${post.image_url || FALLBACK_IMAGE}" alt="${post.title}" loading="lazy" onerror="this.onerror=null;this.src='${FALLBACK_IMAGE}';" />
       </article>
     `
     )

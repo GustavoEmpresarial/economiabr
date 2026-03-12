@@ -333,7 +333,7 @@ async function run() {
     const parsed = parseGeneratedText(raw);
 
     console.log(`Publicando artigo: ${parsed.title}`);
-    // Busca imagem automaticamente se não foi fornecida
+    // Busca imagem automaticamente se nÃ£o foi fornecida
     let finalImageUrl = imageUrl;
     if (!finalImageUrl) {
       console.log("Buscando imagem royalty-free...");
@@ -376,11 +376,11 @@ async function run() {
     // Validar tema duplicado
     const dupeCheck = await checkThemeDuplicate(baseUrl, apiSecret, parsed.title);
     if (dupeCheck.isDuplicate) {
-      console.log(`⚠️  PULADO: Tema ja existe (${dupeCheck.existingPost.title})`);
+      console.log(`âš ï¸  PULADO: Tema ja existe (${dupeCheck.existingPost.title})`);
       continue;
     }
 
-    // Busca imagem automaticamente se não foi fornecida
+    // Busca imagem automaticamente se nÃ£o foi fornecida
     let finalImageUrl = imageUrl;
     if (!finalImageUrl) {
       console.log("Buscando imagem royalty-free...");
@@ -409,3 +409,5 @@ run().catch((err) => {
   console.error("Falha no redator:", err.message);
   process.exit(1);
 });
+
+

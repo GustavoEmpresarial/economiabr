@@ -3,6 +3,8 @@ function slugFromPath() {
   return parts[parts.length - 1] || "";
 }
 
+const FALLBACK_IMAGE = "https://picsum.photos/seed/autoblog-post/1280/720";
+
 async function loadPost() {
   const slug = slugFromPath();
   const titleEl = document.getElementById("post-title");
@@ -35,6 +37,10 @@ async function loadPost() {
 
     if (post.image_url) {
       imageEl.src = post.image_url;
+      imageEl.onerror = () => {
+        imageEl.onerror = null;
+        imageEl.src = FALLBACK_IMAGE;
+      };
       imageEl.classList.remove("hidden");
     }
   } catch (_error) {

@@ -136,22 +136,31 @@ Use esta pauta jornalistica apenas como referencia de tema:
 - Link da fonte: ${source.link}
 - Contexto curto: ${source.description || "Sem descricao no feed"}
 
-Escreva um artigo NOVO e ORIGINAL sobre o mesmo assunto, sem copiar frases da fonte.
+Escreva um artigo NOVO e COMPLETAMENTE ORIGINAL sobre o mesmo assunto.
+NAO copie estrutura, frases, exemplos ou sequencia de ideias da pauta.
+REESCREVA TOTALMENTE com:
+- Vocabulario diferente
+- Comparacoes e exemplos novos
+- Perspectivas que a fonte NAO menciona (historia, contexto global, impacto ampliado)
+- Ordem de apresentacao diferente
+- Aprofundamento com dados complementares
+- Analogias e metaforas criativas relevantes ao leitor brasileiro
+
 Requisitos:
 - Linguagem clara, objetiva e informativa
 - SEO natural
 - Markdown com subtitulos
-- Introducao, desenvolvimento e conclusao
+- Introducao, desenvolvimento e conclusao UNICOS
 - Ate 900 palavras
-- Nao inclua links da pauta no texto final
+- Nao inclua URLs ou links
 - Nao inclua linha iniciada por "Fonte:"
 - Nao inclua cercas de codigo
 
 Entregue exatamente neste formato:
-TITULO: <titulo>
+TITULO: <titulo DIFERENTE do original>
 RESUMO: <resumo curto>
 CONTEUDO:
-<markdown do artigo>
+<markdown 100% original do artigo>
 `;
 
   let response;
@@ -196,6 +205,14 @@ function buildOllamaGenerateUrl() {
   return `${base}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
+function stripG1Urls(markdown) {
+  return String(markdown || "")
+    .replace(/https?:\/\/g1\.globo\.com[^\s)]+/gi, "")
+    .replace(/https?:\/\/[^/]*glbimg[^\s)]+/gi, "")
+    .replace(/https?:\/\/[^\s)]+/g, "")
+    .trim();
+}
+
 function parseGeneratedText(text) {
   const titleMatch = text.match(/TITULO:\s*(.+)/i);
   const resumoMatch = text.match(/RESUMO:\s*(.+)/i);
@@ -203,9 +220,46 @@ function parseGeneratedText(text) {
 
   const title = titleMatch ? titleMatch[1].trim() : "Artigo sem titulo";
   const excerpt = resumoMatch ? resumoMatch[1].trim() : "";
-  const contentMarkdown = stripSourceLines(contentMatch ? contentMatch[1].trim() : text.trim());
+  let contentMarkdown = stripSourceLines(contentMatch ? contentMatch[1].trim() : text.trim());
+  contentMarkdown = stripG1Urls(contentMarkdown);
 
   return { title, excerpt, contentMarkdown };
+}
+
+async function checkThemeDuplicate(baseUrl, apiSecret, title) {
+  try {
+    const response = await fetch(`${baseUrl}/api/posts?limit=50`);
+    const data = await response.json();
+    const posts = data.posts || [];
+
+    const titleWords = new Set(
+      title
+        .toLowerCase()
+        .split(/\s+/)
+        .filter((w) => w.length > 4)
+    );
+
+    for (const post of posts) {
+      const postWords = new Set(
+        post.title
+          .toLowerCase()
+          .split(/\s+/)
+          .filter((w) => w.length > 4)
+      );
+
+      const intersection = [...titleWords].filter((w) => postWords.has(w)).length;
+      const similarity = intersection / Math.max(titleWords.size, postWords.size);
+
+      if (similarity > 0.5) {
+        return { isDuplicate: true, existingPost: post };
+      }
+    }
+
+    return { isDuplicate: false };
+  } catch (error) {
+    console.warn("Nao foi possivel validar tema duplicado:", error.message);
+    return { isDuplicate: false };
+  }
 }
 
 async function publishToServer({ baseUrl, apiSecret, payload }) {
@@ -318,6 +372,13 @@ async function run() {
     });
 
     const parsed = parseGeneratedText(raw);
+
+    // Validar tema duplicado
+    const dupeCheck = await checkThemeDuplicate(baseUrl, apiSecret, parsed.title);
+    if (dupeCheck.isDuplicate) {
+      console.log(`⚠️  PULADO: Tema ja existe (${dupeCheck.existingPost.title})`);
+      continue;
+    }
 
     // Busca imagem automaticamente se não foi fornecida
     let finalImageUrl = imageUrl;

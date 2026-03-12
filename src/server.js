@@ -161,6 +161,82 @@ app.post("/api/posts", requireSecret, async (req, res) => {
   }
 });
 
+app.put("/api/posts/:slug", requireSecret, async (req, res) => {
+  const { slug } = req.params;
+  const { title, excerpt, contentMarkdown, imageUrl } = req.body;
+
+  if (!title || !contentMarkdown) {
+    return res.status(400).json({
+      error: "Campos obrigatorios: title e contentMarkdown",
+    });
+  }
+
+  try {
+    const htmlRaw = marked.parse(String(contentMarkdown));
+    const safeHtml = sanitizePostHtml(String(htmlRaw));
+    const now = nowIso();
+
+    const result = await db.query(
+      `UPDATE posts
+       SET title = $1, excerpt = $2, content_html = $3, content_markdown = $4, image_url = $5, updated_at = $6
+       WHERE slug = $7
+       RETURNING slug`,
+      [
+        String(title).trim(),
+        excerpt ? String(excerpt).trim() : null,
+        safeHtml,
+        String(contentMarkdown),
+        imageUrl ? String(imageUrl).trim() : null,
+        now,
+        slug,
+      ]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Post nao encontrado" });
+    }
+
+    return res.json({ slug: result.rows[0].slug, message: "Post atualizado" });
+  } catch (error) {
+    console.error("Erro ao atualizar post:", error);
+    return res.status(500).json({ error: "Erro interno ao atualizar post" });
+  }
+});
+
+app.delete("/api/posts/:slug", requireSecret, async (req, res) => {
+  const { slug } = req.params;
+
+  try {
+    const result = await db.query(
+      `DELETE FROM posts WHERE slug = $1`,
+      [slug]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Post nao encontrado" });
+    }
+
+    return res.json({ message: "Post deletado" });
+  } catch (error) {
+    console.error("Erro ao deletar post:", error);
+    return res.status(500).json({ error: "Erro interno ao deletar post" });
+  }
+});
+
+app.delete("/api/posts/admin/delete-all", requireSecret, async (req, res) => {
+  try {
+    const result = await db.query(`DELETE FROM posts`);
+    return res.json({ message: `${result.rowCount} posts deletados`, deletedCount: result.rowCount });
+  } catch (error) {
+    console.error("Erro ao deletar todos os posts:", error);
+    return res.status(500).json({ error: "Erro interno" });
+  }
+});
+
+app.get("/admin", (_req, res) => {
+  res.sendFile(path.join(process.cwd(), "public", "admin.html"));
+});
+
 app.get("/blog/:slug", (_req, res) => {
   res.sendFile(path.join(process.cwd(), "public", "post.html"));
 });
